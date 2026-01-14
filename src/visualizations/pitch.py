@@ -389,9 +389,26 @@ class SoccerViz:
 
 
 # Convenience function
-def quick_shot_map(match_id: int, team_name: str) -> Tuple[plt.Figure, plt.Axes]:
-    """Quick function to create a shot map for a team in a match."""
-    from src.data.loader import load_match_events
-    events = load_match_events(match_id)
+def quick_shot_map(events: pd.DataFrame, team_name: str) -> Tuple[plt.Figure, plt.Axes]:
+    """
+    Quick function to create a shot map for a team.
+    
+    Args:
+        events: Match events DataFrame (use StatsBombLoader to load)
+        team_name: Team name to filter shots
+    
+    Returns:
+        Tuple of (figure, axes)
+    
+    Example:
+        from src.data.loader import StatsBombLoader
+        
+        loader = StatsBombLoader()
+        events, info = loader.load_match_by_criteria(
+            competition_name="World Cup",
+            stage="Final"
+        )
+        fig, ax = quick_shot_map(events, team_name=info['home_team'])
+    """
     viz = SoccerViz()
     return viz.plot_shot_map(events, team_name=team_name)
