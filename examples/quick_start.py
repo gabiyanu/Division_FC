@@ -30,6 +30,7 @@ def get_world_cup_final(parser):
     """
     Dynamically find the World Cup final match.
     All values sourced from API, nothing hardcoded.
+    Handles different column name conventions.
     
     Returns:
         tuple: (match_id, match_info)
@@ -56,20 +57,48 @@ def get_world_cup_final(parser):
     # Get matches
     matches = parser.match(competition_id, season_id)
     
+    # Find the stage column (mplsoccer may use different names)
+    stage_col = None
+    for col in ['competition_stage_name', 'competition_stage']:
+        if col in matches.columns:
+            stage_col = col
+            break
+    
     # Find final
-    if 'competition_stage' in matches.columns:
+    if stage_col:
         final = matches[
-            matches['competition_stage'].str.contains('Final', case=False, na=False) &
-            ~matches['competition_stage'].str.contains('Semi|Quarter|Third', case=False, na=False)
+            matches[stage_col].str.contains('Final', case=False, na=False) &
+            ~matches[stage_col].str.contains('Semi|Quarter|Third', case=False, na=False)
         ]
         if len(final) > 0:
             match_info = final.iloc[0]
-            return int(match_info['match_id']), match_info
+            return int(match_info['match_id']), _standardize_match(match_info)
     
     # Fallback: last match by date
     matches = matches.sort_values('match_date', ascending=False)
     match_info = matches.iloc[0]
-    return int(match_info['match_id']), match_info
+    return int(match_info['match_id']), _standardize_match(match_info)
+
+
+def _standardize_match(match_row):
+    """
+    Standardize match column names.
+    mplsoccer uses 'home_team_name', we want 'home_team'.
+    """
+    result = match_row.copy()
+    
+    # Column name mappings
+    mappings = {
+        'home_team_name': 'home_team',
+        'away_team_name': 'away_team',
+        'competition_stage_name': 'competition_stage',
+    }
+    
+    for old, new in mappings.items():
+        if old in result.index:
+            result[new] = result[old]
+    
+    return result
 
 
 def main():

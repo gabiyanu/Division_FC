@@ -188,26 +188,38 @@ class StatsBombLoader:
             match_date: Match date string (e.g., "2022-12-18")
         
         Returns:
-            Match info Series
+            Match info Series with standardized column names
         
         Example:
             match = loader.find_match(comp_id, season_id, home_team="Argentina")
         """
         matches = self.get_matches(competition_id, season_id)
         
-        if home_team:
-            matches = matches[matches['home_team'].str.contains(home_team, case=False, na=False)]
-        if away_team:
-            matches = matches[matches['away_team'].str.contains(away_team, case=False, na=False)]
-        if stage and 'competition_stage' in matches.columns:
-            matches = matches[matches['competition_stage'].str.contains(stage, case=False, na=False)]
+        # Find the team name column (mplsoccer uses 'home_team_name')
+        home_col = self._find_column(matches, ['home_team_name', 'home_team'])
+        away_col = self._find_column(matches, ['away_team_name', 'away_team'])
+        stage_col = self._find_column(matches, ['competition_stage_name', 'competition_stage'])
+        
+        if home_team and home_col:
+            matches = matches[matches[home_col].str.contains(home_team, case=False, na=False)]
+        if away_team and away_col:
+            matches = matches[matches[away_col].str.contains(away_team, case=False, na=False)]
+        if stage and stage_col:
+            matches = matches[matches[stage_col].str.contains(stage, case=False, na=False)]
         if match_date:
             matches = matches[matches['match_date'].astype(str).str.contains(match_date)]
         
         if len(matches) == 0:
             raise ValueError("No matches found with given criteria")
         
-        return matches.iloc[0]
+        return self._standardize_match_info(matches.iloc[0])
+    
+    def _find_column(self, df: pd.DataFrame, candidates: List[str]) -> Optional[str]:
+        """Find the first matching column name from candidates."""
+        for col in candidates:
+            if col in df.columns:
+                return col
+        return None
     
     def find_final(self, competition_id: int, season_id: int) -> pd.Series:
         """
@@ -218,22 +230,83 @@ class StatsBombLoader:
             season_id: Season ID
         
         Returns:
-            Match info Series
+            Match info Series with standardized column names
         """
         matches = self.get_matches(competition_id, season_id)
         
         # Try to find by competition_stage
+        if 'competition_stage_name' in matches.columns:
+            final = matches[
+                matches['competition_stage_name'].str.contains('Final', case=False, na=False) &
+                ~matches['competition_stage_name'].str.contains('Semi|Quarter|Third', case=False, na=False)
+            ]
+            if len(final) > 0:
+                return self._standardize_match_info(final.iloc[0])
+        
+        # Try alternate column name
         if 'competition_stage' in matches.columns:
             final = matches[
                 matches['competition_stage'].str.contains('Final', case=False, na=False) &
                 ~matches['competition_stage'].str.contains('Semi|Quarter|Third', case=False, na=False)
             ]
             if len(final) > 0:
-                return final.iloc[0]
+                return self._standardize_match_info(final.iloc[0])
         
         # Fallback: last match by date
         matches = matches.sort_values('match_date', ascending=False)
-        return matches.iloc[0]
+        return self._standardize_match_info(matches.iloc[0])
+    
+    def _standardize_match_info(self, match_row: pd.Series) -> pd.Series:
+        """
+        Standardize match info column names for consistent access.
+        mplsoccer uses 'home_team_name' while we want 'home_team'.
+        
+        Args:
+            match_row: Raw match Series from mplsoccer
+        
+        Returns:
+            Series with standardized column names
+        """
+        result = match_row.copy()
+        
+        # Map mplsoccer column names to our standard names
+        column_mappings = {
+            'home_team_name': 'home_team',
+            'away_team_name': 'away_team',
+            'home_team_home_team_name': 'home_team',
+            'away_team_away_team_name': 'away_team',
+            'competition_stage_name': 'competition_stage',
+            'competition_competition_name': 'competition',
+            'competition_name': 'competition',
+            'season_season_name': 'season',
+            'season_name': 'season',
+        }
+        
+        for old_name, new_name in column_mappings.items():
+            if old_name in result.index and new_name not in result.index:
+                result[new_name] = result[old_name]
+        
+        # Ensure essential columns exist
+        if 'home_team' not in result.index:
+            # Try to find any column containing team info
+            for col in result.index:
+                if 'home' in col.lower() and 'team' in col.lower() and 'name' in col.lower():
+                    result['home_team'] = result[col]
+                    break
+                elif 'home' in col.lower() and 'team' in col.lower() and 'id' not in col.lower():
+                    result['home_team'] = result[col]
+                    break
+        
+        if 'away_team' not in result.index:
+            for col in result.index:
+                if 'away' in col.lower() and 'team' in col.lower() and 'name' in col.lower():
+                    result['away_team'] = result[col]
+                    break
+                elif 'away' in col.lower() and 'team' in col.lower() and 'id' not in col.lower():
+                    result['away_team'] = result[col]
+                    break
+        
+        return result
     
     # =========================================================================
     # DATA LOADING
