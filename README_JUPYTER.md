@@ -52,7 +52,14 @@ jupyter notebook
 
 ```python
 import sys
-sys.path.insert(0, '.')
+from pathlib import Path
+
+# Find project root (works from any location)
+project_root = Path().absolute()
+while not (project_root / 'src').exists() and project_root.parent != project_root:
+    project_root = project_root.parent
+
+sys.path.insert(0, str(project_root))
 
 from src.data.loader import StatsBombLoader, get_top_players_by_stat, get_goals, get_shots, calculate_xg
 from src.export.instagram import InstagramExporter
@@ -68,7 +75,8 @@ loader = StatsBombLoader()
 
 # Load World Cup Final (all IDs sourced dynamically)
 events, match_info = loader.load_match_by_criteria(
-    competition_name="World Cup",
+    competition_name="FIFA World Cup",
+    season="2022",
     stage="Final"
 )
 
