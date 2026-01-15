@@ -1,0 +1,87 @@
+# =============================================================================
+# PITCH PULSE - Matplotlib Style
+# =============================================================================
+# A dark mode, neon-accented style for soccer analytics
+# 
+# Usage:
+#   import matplotlib.pyplot as plt
+#   plt.style.use('config/pitchpulse.mplstyle')
+# =============================================================================
+
+### FONTS
+font.family: sans-serif
+font.sans-serif: Inter, DejaVu Sans, Helvetica, Arial, sans-serif
+font.size: 11
+font.weight: normal
+
+### FIGURE
+figure.figsize: 10.8, 10.8
+figure.facecolor: 0d1117
+figure.edgecolor: 0d1117
+figure.dpi: 100
+figure.titlesize: 28
+figure.titleweight: bold
+
+### AXES
+axes.facecolor: 0d1117
+axes.edgecolor: 3d4f5f
+axes.linewidth: 1.0
+axes.grid: False
+axes.titlesize: 18
+axes.titleweight: bold
+axes.titlecolor: ffffff
+axes.titlepad: 20
+axes.labelsize: 12
+axes.labelcolor: 8b949e
+axes.labelpad: 10
+axes.spines.top: False
+axes.spines.right: False
+axes.spines.left: True
+axes.spines.bottom: True
+axes.prop_cycle: cycler('color', ['00f5ff', 'ff00aa', 'ffd700', '39ff14', '0066ff', 'ff6b35', '8b949e'])
+
+### GRID
+grid.color: 3d4f5f
+grid.linestyle: --
+grid.linewidth: 0.5
+grid.alpha: 0.3
+
+### TICKS
+xtick.color: 8b949e
+xtick.labelsize: 10
+xtick.direction: out
+xtick.major.size: 5
+xtick.major.width: 1
+xtick.minor.visible: False
+
+ytick.color: 8b949e
+ytick.labelsize: 10
+ytick.direction: out
+ytick.major.size: 5
+ytick.major.width: 1
+ytick.minor.visible: False
+
+### LEGEND
+legend.frameon: False
+legend.fontsize: 10
+legend.labelcolor: ffffff
+legend.facecolor: 161b22
+legend.edgecolor: 3d4f5f
+
+### LINES
+lines.linewidth: 2.0
+lines.markersize: 8
+
+### SCATTER
+scatter.marker: o
+scatter.edgecolors: face
+
+### TEXT
+text.color: ffffff
+
+### SAVEFIG
+savefig.facecolor: 0d1117
+savefig.edgecolor: 0d1117
+savefig.dpi: 150
+savefig.bbox: tight
+savefig.pad_inches: 0.2
