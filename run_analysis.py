@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pandas as pd
 """
 Division FC - Main Analysis Script
 ===================================
@@ -21,6 +22,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import LinearSegmentedColormap
